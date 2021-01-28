@@ -13,7 +13,7 @@ class Site extends CI_Controller {
 
             $query = (" SELECT sites.* FROM `user_sites`
                         LEFT JOIN `sites` ON (`user_sites`.`site_id` = `sites`.`id`)
-                        WHERE `user_id` = '$user_id' 
+                        WHERE `user_id` = '$user_id' AND sites.deleted is null
                     ");
 
             $queryResult = $this->db->query($query);
@@ -33,7 +33,7 @@ class Site extends CI_Controller {
                                 devices.value*SUM( if(devices_input.clear_coin_updated is null,devices_input.coin,0) ) as coin_value, 
                                 if(devices.value*SUM( if(devices_input.clear_coin_updated is null,devices_input.coin,0) ) > devices.maximum,1,0) AS coin_over_max
                                 FROM `devices` LEFT JOIN `devices_input` ON (`devices_input`.`serial` = `devices`.`serial`)
-                                WHERE devices.site_id = '".$value['id']."' Group by devices.serial
+                                WHERE devices.site_id = '".$value['id']."' AND devices.deleted is null Group by devices.serial
                             ");
 
                     $queryResult = $this->db->query($query);

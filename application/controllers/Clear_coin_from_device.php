@@ -1,24 +1,23 @@
 <?php
-class Clear_coin_from_site extends CI_Controller {
+class Clear_coin_from_device extends CI_Controller {
 
     function __construct() {
         parent::__construct();
     }
 
     public function index(){
-        if($this->input->post("site_id")){
+        if($this->input->post("device_id")){
 
-            $site_id = $this->input->post("site_id");
+            $device_id = $this->input->post("device_id");
             $user_id = $this->input->post("user_id");
 
-            //$site_id = 1;
+            //$device_id = 1;
 
             $update = (" UPDATE `devices_input` 
                         Left Join devices on devices_input.serial = devices.serial
-                        Left Join sites on devices.site_id = sites.id
                         SET devices_input.clear_coin_updated = now(),
                         devices_input.user_id = $user_id
-                        WHERE sites.id = '$site_id' " );
+                        WHERE devices.id = '$device_id' " );
 
             if( $this->db->query($update) ){
                 $data['message'] =  'Sucsess';

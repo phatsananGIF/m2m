@@ -1,24 +1,20 @@
 <?php
-class Detail_store extends CI_Controller {
+class List_Devices extends CI_Controller {
 
     function __construct() {
         parent::__construct();
     }
 
     public function index(){
-        if($this->input->post("site_id")){
+        if($this->input->post("user_id")){
             
-            $site_id = $this->input->post("site_id");
-            //$site_id = 1;
+            $user_id = $this->input->post("user_id");
+            //$user_id = 2;
 
-            $query = (" SELECT * FROM `sites` WHERE `id` = '$site_id' AND deleted is null");
-            $Result = $this->db->query($query);
-            $siteResult = $Result->row_array();
-
-            
-
-            $query = (" SELECT devices.* , SUM( if(devices_input.clear_coin_updated is null,devices_input.coin,0) ) as coin_count,
+            $query = (" SELECT devices.* , sites.site_name, SUM( if(devices_input.clear_coin_updated is null,devices_input.coin,0) ) as coin_count,
                         devices.value*SUM( if(devices_input.clear_coin_updated is null,devices_input.coin,0) ) as coin_value,
+
+                        if(devices.value*SUM( if(devices_input.clear_coin_updated is null,devices_input.coin,0) ) > devices.maximum,1,0) AS coin_over_max,
 
                         if( ROUND( ( devices.value*SUM( if(devices_input.clear_coin_updated is null,devices_input.coin,0) ) ) / devices.maximum ,2)  >1, 1, 
                         ROUND( ( devices.value*SUM( if(devices_input.clear_coin_updated is null,devices_input.coin,0) ) ) / devices.maximum ,2))  as percent_progress,
@@ -29,8 +25,11 @@ class Detail_store extends CI_Controller {
                         (SELECT devices_input.updated FROM `devices_input` WHERE `devices_input`.`serial` =  `devices`.`serial`
                         ORDER by devices_input.updated DESC LIMIT 1) as date_updated
 
-                        FROM `devices` LEFT JOIN `devices_input` ON (`devices_input`.`serial` = `devices`.`serial`)
-                        WHERE devices.site_id = '$site_id' AND devices.deleted is null Group by devices.serial
+                        FROM `devices` 
+                        LEFT JOIN `devices_input` ON (`devices_input`.`serial` = `devices`.`serial`)
+                        LEFT JOIN `sites` ON (`sites`.`id` = `devices`.`site_id`)
+                        LEFT JOIN `user_sites` ON (`user_sites`.`site_id` = `sites`.`id`)
+                        WHERE user_sites.user_id = '$user_id' AND devices.deleted is null Group by devices.serial
                     ");
 
             $queryResult = $this->db->query($query); 
@@ -42,7 +41,6 @@ class Detail_store extends CI_Controller {
 
                 $data['status'] = "Sucsess";
                 $filling_total_coin = [];
-                $total_coin = 0;
                 foreach($devicesResult as $key => $value){
                     if($value['coin_count'] == null)$devicesResult[$key]['coin_count'] = "0";
                     if($value['coin_value'] == null)$devicesResult[$key]['coin_value'] = "0";
@@ -51,7 +49,7 @@ class Detail_store extends CI_Controller {
                     if($value['date_updated'] == null)$devicesResult[$key]['date_updated'] = "0000-00-00 00:00:00";
 
                     $filling_total_coin[$key] = $value['coin_value'];
-                    $total_coin += $value['coin_value'];
+                    
                 }
 
                 arsort($filling_total_coin);
@@ -62,19 +60,16 @@ class Detail_store extends CI_Controller {
 
                 }
 
-                $data['site'] = $siteResult;
-                $data['site']['total_coin'] = $total_coin;
+                
             }
 
             echo json_encode($data);
             
-
-            /*
+        /*
             echo '<pre>';
             print_r($data);
             echo  '</pre>';
-            */
-        
+        */
 
         }
 
